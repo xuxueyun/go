@@ -32,7 +32,7 @@ func (a *onceError) Load() error {
 	return a.err
 }
 
-// ErrClosedPipe is the error used for read or write operations on a closed pipe.
+// ErrClosedPipe 是在已关闭的管道上进行读写操作时返回的错误。
 var ErrClosedPipe = errors.New("io: read/write on closed pipe")
 
 // A pipe is the shared pipe structure underlying PipeReader and PipeWriter.

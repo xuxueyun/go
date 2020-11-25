@@ -2,78 +2,68 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-// Package io provides basic interfaces to I/O primitives.
-// Its primary job is to wrap existing implementations of such primitives,
-// such as those in package os, into shared public interfaces that
-// abstract the functionality, plus some other related primitives.
+// io 包提供了 I/O 原语的基本接口。
+// 它的主要功能是封装了这些已存在的原语，例如 os 包中的那些，
+// 抽象成函数的公共接口，再加上一些其它相关的原语。
 //
-// Because these interfaces and primitives wrap lower-level operations with
-// various implementations, unless otherwise informed clients should not
-// assume they are safe for parallel execution.
+// 由于这些接口和原语封装的是低级别的操作指令，因此除非被明确
+// 告知，否则使用者应该认为他们不是并行安全的。
 package io
 
 import (
 	"errors"
 )
 
-// Seek whence values.
+// Seek 遍历的相关的常量。
 const (
-	SeekStart   = 0 // seek relative to the origin of the file
-	SeekCurrent = 1 // seek relative to the current offset
-	SeekEnd     = 2 // seek relative to the end
+	SeekStart   = 0 // 相对于文件起始位置的遍历
+	SeekCurrent = 1 // 相对于当前偏移量的遍历
+	SeekEnd     = 2 // 相对于终点的遍历
 )
 
-// ErrShortWrite means that a write accepted fewer bytes than requested
-// but failed to return an explicit error.
+// ErrShortWrite 表示接受写入的字节数少于请求的字节数，但未能返回显式错误。
 var ErrShortWrite = errors.New("short write")
 
-// ErrShortBuffer means that a read required a longer buffer than was provided.
+// ErrShortBuffer 表示当前提供的缓冲区小于读请求所需要的。
 var ErrShortBuffer = errors.New("short buffer")
 
-// EOF is the error returned by Read when no more input is available.
-// Functions should return EOF only to signal a graceful end of input.
-// If the EOF occurs unexpectedly in a structured data stream,
-// the appropriate error is either ErrUnexpectedEOF or some other error
-// giving more detail.
+// EOF 是读取时无可读输入数据时的错误返回信息。
+// 函数应当只在标志正常的输入结束时返回 EOF。
+// 如果 EOF 在结构化数据流中出现意外，适当的错
+// 误不是 ErrUnexpectedEOF 就是一些其它能给出
+// 更多详情的错误。
 var EOF = errors.New("EOF")
 
-// ErrUnexpectedEOF means that EOF was encountered in the
-// middle of reading a fixed-size block or data structure.
+// ErrUnexpectedEOF 表示在读取固定大小的块或数据结构过程中遇到 EOF。
 var ErrUnexpectedEOF = errors.New("unexpected EOF")
 
-// ErrNoProgress is returned by some clients of an io.Reader when
-// many calls to Read have failed to return any data or error,
-// usually the sign of a broken io.Reader implementation.
+// ErrNoProgress 是某些客户端的 io.Reader 在 Read 调用失败时未能返回任何
+// 数据或错误时返回的，通常是 io.Reader 发生了错误的情况。
 var ErrNoProgress = errors.New("multiple Read calls return no data or error")
 
-// Reader is the interface that wraps the basic Read method.
+// Reader 接口封装了基本的 Read 方法。
 //
-// Read reads up to len(p) bytes into p. It returns the number of bytes
-// read (0 <= n <= len(p)) and any error encountered. Even if Read
-// returns n < len(p), it may use all of p as scratch space during the call.
-// If some data is available but not len(p) bytes, Read conventionally
-// returns what is available instead of waiting for more.
+// Read 将 len(p) 个字节读取到 p 中。
+// 它返回读取到的字节（0 <= n <= len(p)）和过程中的任何错误。
+// 即使 Read 返回的 n < len(p)，它也会在调用过程中使用 p 的全
+// 部作为暂存空间。若一些数据可用但不到 len(p) 个字节，Read 会
+// 照例返回可用的数据， 而不再等待更多数据。
 //
-// When Read encounters an error or end-of-file condition after
-// successfully reading n > 0 bytes, it returns the number of
-// bytes read. It may return the (non-nil) error from the same call
-// or return the error (and n == 0) from a subsequent call.
-// An instance of this general case is that a Reader returning
-// a non-zero number of bytes at the end of the input stream may
-// return either err == EOF or err == nil. The next Read should
-// return 0, EOF.
+// 当 Read 在成功读取 n > 0 个字节后遇到一个错误或 EOF 情况，
+// 它就会返回已读取到的字节。它会给相同的调用中返回（非nil的）
+// 错误或给后续的调用中返回错误（和 n == 0）。 这种一般情况
+// 的一个例子就是 Reader 在输入流结束时会返回一个非零的字节数，
+// 可能的返回不是 err == EOF 就是 err == nil。无论如何，下一
+// 个 Read 都应当返回 0, EOF。
 //
-// Callers should always process the n > 0 bytes returned before
-// considering the error err. Doing so correctly handles I/O errors
-// that happen after reading some bytes and also both of the
-// allowed EOF behaviors.
+// 调用者应当总在遇到错误 err 前处理 n > 0 的字节。这样做可以读
+// 取一些字节，以及允许的 EOF 行为后正确地处理 I/O 错误。这样做
+// 可以正确处理在读取某些字节后发生的 I/O 错误，以及两种允许的 EOF 行为。
 //
-// Implementations of Read are discouraged from returning a
-// zero byte count with a nil error, except when len(p) == 0.
-// Callers should treat a return of 0 and nil as indicating that
-// nothing happened; in particular it does not indicate EOF.
+// Read 的实现在 len(p) == 0 以外的情况下会阻止返回零字节的数据
+// 和 nil 错误，调用者应将返回 0 和 nil 视作什么也没有发生；特别是它并不表示 EOF。
 //
-// Implementations must not retain p.
+// 实现必须不包含 p。
 type Reader interface {
 	Read(p []byte) (n int, err error)
 }
@@ -352,18 +342,16 @@ func CopyN(dst Writer, src Reader, n int64) (written int64, err error) {
 	return
 }
 
-// Copy copies from src to dst until either EOF is reached
-// on src or an error occurs. It returns the number of bytes
-// copied and the first error encountered while copying, if any.
+// Copy 是将 src 拷贝到 dst 直到遇到 EOF 或者遇到错误。
+// 将返回拷贝到的字节数据和遇到的第一个错误，如果有的话。
 //
-// A successful Copy returns err == nil, not err == EOF.
-// Because Copy is defined to read from src until EOF, it does
-// not treat an EOF from Read as an error to be reported.
+// 成功的 Copy 将返回 err == nil，而非 err == EOF。
+// 因为 Copy 被定义为从 src 读取直到 EOF 为止，因此它
+// 不会将来自 Read 的 EOF 当做错误来返回。
 //
-// If src implements the WriterTo interface,
-// the copy is implemented by calling src.WriteTo(dst).
-// Otherwise, if dst implements the ReaderFrom interface,
-// the copy is implemented by calling dst.ReadFrom(src).
+// 若 src 实现了 WriterTo 接口，其复制操作可通过调
+// 用 src.WriteTo(dst) 实现。 否则，若 dst 实现了
+// ReaderFrom 接口，其复制操作可通过调用 dst.ReadFrom(src) 实现。
 func Copy(dst Writer, src Reader) (written int64, err error) {
 	return copyBuffer(dst, src, nil)
 }

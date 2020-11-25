@@ -21,7 +21,7 @@ func ExampleCopy() {
 		log.Fatal(err)
 	}
 
-	// Output:
+	// 输出:
 	// some io.Reader stream to be read
 }
 
